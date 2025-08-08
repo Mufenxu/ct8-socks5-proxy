@@ -36,22 +36,30 @@ log_warn() {
     echo -e "${YELLOW}[警告]${NC} $1"
 }
 
-# 确认清理
-echo -e "${YELLOW}⚠️  警告：此操作将彻底删除所有代理服务痕迹！${NC}"
-echo "将要清理的内容："
-echo "• 所有相关进程（python、pip、cache、wheel、proxy、socks等）"
-echo "• 所有服务文件和脚本"
-echo "• 所有日志文件"
-echo "• 所有配置文件"
-echo "• 所有定时任务"
-echo "• 所有PID文件和临时文件"
-echo "• 命令历史记录中的相关条目"
-echo ""
-
-read -p "确认彻底清理所有痕迹？输入 'YES' 继续: " -r
-if [[ ! $REPLY == "YES" ]]; then
-    echo "操作已取消"
-    exit 0
+# 检查是否为交互模式
+if [ -t 0 ]; then
+    # 交互模式 - 需要确认
+    echo -e "${YELLOW}⚠️  警告：此操作将彻底删除所有代理服务痕迹！${NC}"
+    echo "将要清理的内容："
+    echo "• 所有相关进程（python、pip、cache、wheel、proxy、socks等）"
+    echo "• 所有服务文件和脚本"
+    echo "• 所有日志文件"
+    echo "• 所有配置文件"
+    echo "• 所有定时任务"
+    echo "• 所有PID文件和临时文件"
+    echo "• 命令历史记录中的相关条目"
+    echo ""
+    
+    read -p "确认彻底清理所有痕迹？输入 'YES' 继续: " -r
+    if [[ ! $REPLY == "YES" ]]; then
+        echo "操作已取消"
+        exit 0
+    fi
+else
+    # 非交互模式（curl | bash）- 直接执行
+    echo -e "${YELLOW}⚠️  检测到非交互模式，开始自动清理...${NC}"
+    echo "清理范围：所有代理服务相关的进程、文件、配置和痕迹"
+    sleep 2
 fi
 
 echo ""
