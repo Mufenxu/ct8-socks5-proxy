@@ -128,7 +128,6 @@ download_files() {
     
     local files=(
         "ct8_socks5.py"
-        "ct8_deploy.sh"
         "ct8_manager.sh"
         "install.sh"
         "README.md"
@@ -137,7 +136,10 @@ download_files() {
     for file in "${files[@]}"; do
         log_info "下载: $file"
         if curl -sL "$RAW_URL/$file" -o "$file"; then
-            chmod +x "$file" 2>/dev/null || true
+            # 为脚本文件添加执行权限
+            if [[ "$file" == *.sh ]] || [[ "$file" == *.py ]]; then
+                chmod +x "$file"
+            fi
             log_info "✓ $file 下载完成"
         else
             log_error "✗ $file 下载失败"
@@ -154,7 +156,8 @@ run_installation() {
     
     if [ -f "install.sh" ]; then
         chmod +x install.sh
-        ./install.sh
+        # 使用bash明确执行，避免权限问题
+        bash install.sh
     else
         log_error "安装脚本不存在"
         exit 1
