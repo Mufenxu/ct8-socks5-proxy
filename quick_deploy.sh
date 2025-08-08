@@ -14,8 +14,8 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 # 项目配置
-REPO_URL="https://github.com/YOUR_USERNAME/ct8-socks5-proxy"
-RAW_URL="https://raw.githubusercontent.com/YOUR_USERNAME/ct8-socks5-proxy/main"
+REPO_URL="https://github.com/Mufenxu/ct8-socks5-proxy"
+RAW_URL="https://raw.githubusercontent.com/Mufenxu/ct8-socks5-proxy/main"
 PROJECT_NAME="ct8-socks5-proxy"
 VERSION="1.0.0"
 
@@ -55,7 +55,7 @@ log_step() {
 check_network() {
     log_step "检查网络连接..."
     
-    if ! curl -s --connect-timeout 10 "$RAW_URL/README.md" > /dev/null; then
+    if ! curl -s --connect-timeout 10 "https://raw.githubusercontent.com/Mufenxu/ct8-socks5-proxy/main/README.md" > /dev/null; then
         log_error "无法连接到GitHub，请检查网络连接"
         exit 1
     fi

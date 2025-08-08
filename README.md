@@ -3,8 +3,8 @@
 ⭐ **专为CT8免费服务器设计的Telegram代理解决方案，注重隐蔽性和安全性。**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub stars](https://img.shields.io/github/stars/YOUR_USERNAME/ct8-socks5-proxy.svg)](https://github.com/YOUR_USERNAME/ct8-socks5-proxy/stargazers)
-[![GitHub issues](https://img.shields.io/github/issues/YOUR_USERNAME/ct8-socks5-proxy.svg)](https://github.com/YOUR_USERNAME/ct8-socks5-proxy/issues)
+[![GitHub stars](https://img.shields.io/github/stars/Mufenxu/ct8-socks5-proxy.svg)](https://github.com/Mufenxu/ct8-socks5-proxy/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/Mufenxu/ct8-socks5-proxy.svg)](https://github.com/Mufenxu/ct8-socks5-proxy/issues)
 
 ## 🔒 安全特性
 
@@ -19,14 +19,14 @@
 
 ```bash
 # CT8服务器上运行（一条命令搞定）
-bash <(curl -sL https://raw.githubusercontent.com/YOUR_USERNAME/ct8-socks5-proxy/main/quick_deploy.sh)
+bash <(curl -sL https://raw.githubusercontent.com/Mufenxu/ct8-socks5-proxy/main/quick_deploy.sh)
 ```
 
 ## 📦 手动部署
 
 ```bash
 # 克隆项目
-git clone https://github.com/YOUR_USERNAME/ct8-socks5-proxy.git
+git clone https://github.com/Mufenxu/ct8-socks5-proxy.git
 cd ct8-socks5-proxy
 
 # 运行安装脚本

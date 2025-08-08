@@ -128,7 +128,7 @@ prepare_scripts() {
     log_info "本地文件未找到，将从GitHub下载..."
     
     # GitHub仓库配置
-    local github_repo="YOUR_USERNAME/ct8-socks5-proxy"
+    local github_repo="Mufenxu/ct8-socks5-proxy"
     local raw_url="https://raw.githubusercontent.com/$github_repo/main"
     
     # 检查网络连接
