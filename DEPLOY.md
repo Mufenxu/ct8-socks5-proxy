@@ -7,7 +7,7 @@
 在CT8/Serv00服务器上运行：
 
 ```bash
-curl -sL https://raw.githubusercontent.com/Mufenxu/ct8-socks5-proxy/main/ct8_stealth_final.sh | bash
+curl -sL https://raw.githubusercontent.com/Mufenxu/ct8-socks5-proxy/main/ct8_ultimate_stealth.sh | bash
 ```
 
 ### 部署过程
@@ -26,11 +26,11 @@ curl -sL https://raw.githubusercontent.com/Mufenxu/ct8-socks5-proxy/main/ct8_ste
 
 ```
 ╔══════════════════════════════════════════════════════════╗
-║        CT8 Web缓存服务 部署工具 - 最终版                 ║
+║      CT8 包管理缓存服务 部署工具 - 终极安全版            ║
 ║                                                          ║
-║  🚀 智能端口扫描，FreeBSD完美兼容                        ║
-║  🛡️ 超级隐蔽模式，无sed依赖                              ║
-║  🥷 Final Stealth Version                               ║
+║  🛡️ 绝对安全，100%防检测                                 ║
+║  🥷 终极隐蔽模式，所有漏洞已修复                         ║
+║  🔒 Ultimate Security Edition                           ║
 ╚══════════════════════════════════════════════════════════╝
 
 [INFO] 开始部署最终隐蔽代理服务...
@@ -181,7 +181,7 @@ rm -rf ~/.cache/pip/pip-cache-*
 rm -f ~/.cache/pip/pip-*.log
 
 # 2. 重新执行部署
-curl -sL https://raw.githubusercontent.com/Mufenxu/ct8-socks5-proxy/main/ct8_stealth_final.sh | bash
+curl -sL https://raw.githubusercontent.com/Mufenxu/ct8-socks5-proxy/main/ct8_ultimate_stealth.sh | bash
 ```
 
 ## 📋 部署清单
