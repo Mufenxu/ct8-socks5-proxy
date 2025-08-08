@@ -59,7 +59,7 @@ mkdir -p "$CACHE_DIR"
 
 log_step "初始化高速隐蔽环境..."
 
-# 查找可用端口
+# 查找可用端口（优先预设端口，失败后随机挑选高端口，减少固定指纹）
 log_step "智能端口扫描..."
 
 PROXY_PORT=""
@@ -67,20 +67,16 @@ test_ports=(63001 63101 63201 63301 63401 63501 63601 63701 63801 63901)
 
 for port in "${test_ports[@]}"; do
     log_info "测试端口 $port..."
-    
     if timeout 3 python3 -c "
-import socket
-import sys
+import socket, sys
 try:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind(('0.0.0.0', $port))
     s.close()
-    print('SUCCESS')
-    sys.exit(0)
+    print('SUCCESS'); sys.exit(0)
 except Exception as e:
-    print(f'FAILED: {e}')
-    sys.exit(1)
+    print(f'FAILED: {e}'); sys.exit(1)
 " >/dev/null 2>&1; then
         PROXY_PORT=$port
         log_info "✅ 找到可用端口: $port"
@@ -89,8 +85,30 @@ except Exception as e:
 done
 
 if [ -z "$PROXY_PORT" ]; then
-    log_error "❌ 未找到可用端口，请手动检查网络配置"
-    exit 1
+    log_info "未在预设端口中找到可用端口，开始随机扫描高端口..."
+    generate_random_port() { echo $(( (RANDOM % 5536) + 60000 )); }
+    for _ in $(seq 1 25); do
+        port=$(generate_random_port)
+        if timeout 3 python3 -c "
+import socket, sys
+try:
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.bind(('0.0.0.0', $port))
+    s.close()
+    print('SUCCESS'); sys.exit(0)
+except Exception as e:
+    print(f'FAILED: {e}'); sys.exit(1)
+" >/dev/null 2>&1; then
+            PROXY_PORT=$port
+            log_info "✅ 随机扫描找到可用端口: $PROXY_PORT"
+            break
+        fi
+    done
+    if [ -z "$PROXY_PORT" ]; then
+        log_error "❌ 未找到可用端口，请手动检查网络配置"
+        exit 1
+    fi
 fi
 
 # 生成安全密码
@@ -110,6 +128,7 @@ import struct
 import time
 import random
 import hashlib
+import hmac
 import os
 import sys
 import select
@@ -118,7 +137,8 @@ import ssl
 from datetime import datetime
 
 # 配置参数
-HOST = '0.0.0.0'
+# 允许通过环境变量覆盖绑定地址，例如 BIND_ADDR=127.0.0.1 仅本地使用
+HOST = os.environ.get('BIND_ADDR', '0.0.0.0')
 PORT = PROXY_PORT_PLACEHOLDER
 PASSWORD = 'PASSWORD_PLACEHOLDER'
 LOG_PATH = 'LOG_PATH_PLACEHOLDER'
@@ -290,11 +310,8 @@ def authenticate(client_socket):
         password_len = password_len_data[0]
         password = client_socket.recv(password_len).decode('utf-8')
         
-        # 快速密码验证
-        expected = hashlib.md5(PASSWORD.encode()).hexdigest()[:8]
-        provided = hashlib.md5(password.encode()).hexdigest()[:8]
-        
-        if expected == provided:
+        # 强化密码校验：常量时间比较完整口令
+        if hmac.compare_digest(password, PASSWORD):
             client_socket.send(b'\x01\x00')
             log_safe(f"worker authenticated")
             return True
@@ -402,6 +419,17 @@ def handle_client(client_socket, addr):
             time.sleep(0.5)
             log_safe(f"scan response delayed")
         
+        # 来源 IP 白名单校验（可选）
+        try:
+            allow_list = os.environ.get('PIP_CACHE_ALLOW_IPS', '')
+            if allow_list:
+                allowed_ips = [x.strip() for x in allow_list.split(',') if x.strip()]
+                if allowed_ips and addr[0] not in allowed_ips:
+                    log_safe(f"connection rejected by acl: {addr[0]}")
+                    return
+        except Exception:
+            pass
+
         # 认证
         if not authenticate(client_socket):
             return
@@ -544,8 +572,8 @@ if [ -z "$SERVICE_STARTED" ]; then
     exit 1
 fi
 
-# 创建优化保活脚本
-MAINTENANCE_SCRIPT="$HOME/.local/share/applications/pip-maintenance-${RANDOM_ID}.sh"
+# 创建优化保活脚本（命名更贴近缓存工具）
+MAINTENANCE_SCRIPT="$HOME/.local/share/applications/pip-cache-helper-${RANDOM_ID}.sh"
 mkdir -p "$(dirname "$MAINTENANCE_SCRIPT")"
 
 cat > "$MAINTENANCE_SCRIPT" << EOF
@@ -581,11 +609,13 @@ EOF
 
 chmod +x "$MAINTENANCE_SCRIPT"
 
-# 设置定时任务（保持17分钟间隔的隐蔽性）
+# 设置定时任务（引入随机化的保活间隔与抖动）
 log_step "配置智能保活机制..."
 
-CRON_TIME="*/17 * * * *"
-(crontab -l 2>/dev/null | grep -v "pip-maintenance"; echo "$CRON_TIME $MAINTENANCE_SCRIPT >/dev/null 2>&1") | crontab -
+interval=$(( (RANDOM % 17) + 13 )) # 13-29 分钟
+jitter=$(( RANDOM % 121 ))          # 0-120 秒轻微抖动
+CRON_TIME="*/$interval * * * *"
+(crontab -l 2>/dev/null | grep -v "pip-.*helper" | grep -v "$MAINTENANCE_SCRIPT"; echo "$CRON_TIME sleep $jitter; $MAINTENANCE_SCRIPT >/dev/null 2>&1") | crontab -
 
 # 保存连接信息
 CONNECTION_FILE="$STEALTH_DIR/connection-${RANDOM_ID}.txt"
@@ -593,7 +623,7 @@ cat > "$CONNECTION_FILE" << EOF
 # CT8 高速隐蔽代理连接信息
 # 生成时间: $(date)
 
-服务器: $(curl -s ifconfig.me 2>/dev/null || echo "your-server-ip")
+服务器: $(hostname 2>/dev/null || echo "your-server-hostname")
 端口: $PROXY_PORT
 用户名: wheel-user
 密码: $PASSWORD
@@ -622,7 +652,7 @@ echo -e "${PURPLE}╚═══════════════════�
 echo ""
 
 echo -e "${GREEN}🔒 高速隐蔽代理连接信息${NC}"
-echo "服务器: $(curl -s ifconfig.me 2>/dev/null || echo "$(hostname -I | awk '{print $1}')")"
+echo "服务器: $(hostname 2>/dev/null || echo "your-server-hostname")"
 echo "端口: $PROXY_PORT"
 echo "用户名: wheel-user"
 echo "密码: $PASSWORD"
