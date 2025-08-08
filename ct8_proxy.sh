@@ -146,7 +146,7 @@ PID_PATH = 'PID_PATH_PLACEHOLDER'
 CACHE_DIR = 'CACHE_DIR_PLACEHOLDER'
 
 # 性能优化配置
-BUFFER_SIZE = 65536  # 64KB缓冲区，提升传输速度
+BUFFER_SIZE = 131072  # 128KB缓冲区，减少系统调用开销
 MAX_CONNECTIONS = 200  # 增加最大连接数
 SOCKET_TIMEOUT = 60  # 增加超时时间
 
@@ -356,6 +356,11 @@ def handle_request(client_socket):
         # 优化socket选项
         target_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         target_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)  # 禁用Nagle算法
+        try:
+            target_socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, BUFFER_SIZE)
+            target_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, BUFFER_SIZE)
+        except Exception:
+            pass
         
         try:
             target_socket.connect((addr, port))
@@ -376,34 +381,42 @@ def handle_request(client_socket):
         return None
 
 def high_speed_relay(source, destination):
-    """高速数据中继 - 零延迟版本"""
+    """高速数据中继 - 零延迟版本（减少系统调用，使用recv_into+sendall）"""
     try:
         # 优化socket选项
         source.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         destination.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        
+        try:
+            source.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, BUFFER_SIZE)
+            destination.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, BUFFER_SIZE)
+        except Exception:
+            pass
+
+        buffer = bytearray(BUFFER_SIZE)
+        view = memoryview(buffer)
+
         # 使用select进行高效I/O
         while True:
-            ready, _, _ = select.select([source], [], [], 1)
-            if ready:
-                data = source.recv(BUFFER_SIZE)
-                if not data:
-                    break
-                destination.send(data)
-            else:
-                # 检查连接是否还活着
-                try:
-                    source.send(b'')
-                except:
-                    break
-                    
-    except:
+            readable, _, _ = select.select([source], [], [], 1)
+            if not readable:
+                continue
+            n = source.recv_into(view)
+            if n <= 0:
+                break
+            try:
+                destination.sendall(view[:n])
+            except Exception:
+                break
+    except Exception:
         pass
     finally:
         try:
             source.close()
+        except Exception:
+            pass
+        try:
             destination.close()
-        except:
+        except Exception:
             pass
 
 def handle_client(client_socket, addr):
@@ -412,6 +425,11 @@ def handle_client(client_socket, addr):
         # 优化socket选项
         client_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        try:
+            client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, BUFFER_SIZE)
+            client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, BUFFER_SIZE)
+        except Exception:
+            pass
         
         # 快速扫描检测（最小延迟）
         if fast_scan_detect(addr):
@@ -490,6 +508,12 @@ def main():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)  # 端口重用
+    try:
+        # 增大监听套接字缓冲
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, BUFFER_SIZE)
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, BUFFER_SIZE)
+    except Exception:
+        pass
     
     try:
         server.bind((HOST, PORT))
