@@ -1,6 +1,6 @@
 # CT8专用隐蔽SOCKS5代理
 
-⭐ **专为CT8免费服务器设计的Telegram代理解决方案，注重隐蔽性和安全性。**
+⭐ **专为CT8/Serv00免费服务器设计的Telegram代理解决方案，注重隐蔽性和安全性。**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub stars](https://img.shields.io/github/stars/Mufenxu/ct8-socks5-proxy.svg)](https://github.com/Mufenxu/ct8-socks5-proxy/stargazers)
@@ -18,7 +18,7 @@
 ## 🚀 GitHub一键部署（推荐）
 
 ```bash
-# CT8服务器上运行（一条命令搞定）
+# CT8/Serv00服务器上运行（一条命令搞定）
 bash <(curl -sL https://raw.githubusercontent.com/Mufenxu/ct8-socks5-proxy/main/quick_deploy.sh)
 ```
 

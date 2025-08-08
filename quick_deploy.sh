@@ -68,23 +68,31 @@ check_system() {
     log_step "检查系统环境..."
     
     # 检查操作系统
-    if [[ ! "$OSTYPE" =~ ^linux ]]; then
+    if [[ ! "$OSTYPE" =~ ^(linux|freebsd) ]]; then
         log_error "不支持的操作系统: $OSTYPE"
-        log_error "此脚本仅支持Linux系统（如CT8服务器）"
+        log_error "此脚本支持Linux和FreeBSD系统（如CT8/Serv00服务器）"
         exit 1
     fi
     
     # 检查Python3
     if ! command -v python3 &> /dev/null; then
         log_error "Python3未安装"
-        log_error "请先安装Python3: apt update && apt install python3"
+        if [[ "$OSTYPE" =~ ^freebsd ]]; then
+            log_error "FreeBSD系统请使用: pkg install python3"
+        else
+            log_error "Linux系统请使用: apt update && apt install python3"
+        fi
         exit 1
     fi
     
     # 检查curl
     if ! command -v curl &> /dev/null; then
         log_error "curl未安装"
-        log_error "请先安装curl: apt update && apt install curl"
+        if [[ "$OSTYPE" =~ ^freebsd ]]; then
+            log_error "FreeBSD系统请使用: pkg install curl"
+        else
+            log_error "Linux系统请使用: apt update && apt install curl"
+        fi
         exit 1
     fi
     

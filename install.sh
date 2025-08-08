@@ -55,8 +55,9 @@ check_system() {
     log_step "检查系统环境..."
     
     # 检查操作系统
-    if [[ ! "$OSTYPE" =~ ^linux ]]; then
+    if [[ ! "$OSTYPE" =~ ^(linux|freebsd) ]]; then
         log_error "不支持的操作系统: $OSTYPE"
+        log_error "此脚本支持Linux和FreeBSD系统（如CT8/Serv00服务器）"
         exit 1
     fi
     

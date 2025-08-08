@@ -66,7 +66,7 @@ bash <(curl -sL https://raw.githubusercontent.com/Mufenxu/ct8-socks5-proxy/main/
 ✅ 一条命令搞定，无需技术基础
 
 **使用方法：**
-1. SSH连接到你的CT8服务器
+1. SSH连接到你的CT8/Serv00服务器
 2. 复制粘贴下面命令并回车：
 
 bash <(curl -sL https://raw.githubusercontent.com/Mufenxu/ct8-socks5-proxy/main/quick_deploy.sh)
